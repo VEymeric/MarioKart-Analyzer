@@ -1,4 +1,5 @@
-import sys
+from threading import Thread
+import cv2
 import os
 import os.path
 import glob
@@ -30,9 +31,6 @@ def check_map(arg1, arg2):
     min = 100
     for img in imgs:
         n_m, n_0 = compare_images(image_test, img)
-        print(os.path.basename(files[index_c])[:-4])
-        print("Manhattan norm:", n_m, "/ per pixel:", n_m/img.size)
-        print("Zero norm:", n_0, "/ per pixel:", n_0*1.0/img.size)
         if(n_m/img.size < min):
             index = index_c
             min = n_m/img.size
@@ -60,11 +58,9 @@ def check_state(arg1, arg2):
     # compare
     index = 0
     index_c = 0
-    min = 100
+    min = 200
     for img in imgs:
         n_m, n_0 = compare_images(image_test, img)
-        print(os.path.basename(files[index_c])[:-4])
-        print("Manhattan norm:", n_m, "/ per pixel:", n_m/img.size)
         if(n_m/img.size < min):
             index = index_c
             min = n_m/img.size
@@ -101,5 +97,53 @@ def normalize(arr):
     return (arr-amin)*255/rng
 
 
-if __name__ == "__main__":
-    check_map(sys.argv[1],sys.argv[2])
+class CheckState(Thread):
+    """Thread chargé simplement d'afficher un mot dans la console."""
+    def __init__(self, screenshoot):
+        Thread.__init__(self)
+        self.screenshoot = screenshoot
+        self.result = None
+    def result(self):
+        """Renvoie le résultat lorsqu'il est connu"""
+        return self.result
+    def run(self):
+        self.result = check_state("C:\\Users\ISEN\DocDuC\MK\MarioKart-Analyzer\\ressources\states", self.screenshoot)
+
+
+class Video(Thread):
+    """Thread chargé simplement d'afficher un mot dans la console."""
+    def __init__(self):
+        Thread.__init__(self)
+
+    def run(self):
+        MK_video = 'D:\Téléchargements\mariokart\MK (1).mp4'  # change the file name if needed
+        cap = cv2.VideoCapture(MK_video)  # load the video
+        count = 0
+        while (cap.isOpened()):  # play the video by reading frame by frame
+            ret, frame = cap.read()
+            if ret == True:
+                count += 1
+                # optional: do some image processing here
+                cv2.imshow("Mario Kart", cv2.resize(frame, None, fx=0.2, fy=0.2, interpolation=cv2.INTER_CUBIC))
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                if  count % 60 == 0:
+                    cv2.imwrite("frame%d.jpg" % ret, frame)  # save frame as JPEG file
+                    thread_4 = CheckState("frame1.jpg")
+                    thread_4.start()
+                    #thread_4.join()
+                    resultat1=thread_4.result
+                    print(resultat1)
+            else:
+                break
+        cap.release()
+        cv2.destroyAllWindows()
+# Création des threads
+thread_3 = Video()
+
+# Lancement des threads
+thread_3.start()
+
+
+# Attend que les threads se terminent
+thread_3.join()

@@ -3,9 +3,12 @@ import cv2
 import os
 import os.path
 import glob
+
+import numpy
 from scipy.misc import imread
 from scipy.linalg import norm
 from scipy import sum, average
+from PIL import Image, ImageChops
 
 
 def check_map(arg1, arg2):
@@ -74,8 +77,8 @@ def check_state(arg1, arg2):
 def compare_images(img1, img2):
     # normalize to compensate for exposure difference, this may be unnecessary
     # consider disabling it
-    img1 = normalize(img1)
-    img2 = normalize(img2)
+    #img1 = normalize(img1)
+    #img2 = normalize(img2)
     # calculate the difference and its norms
     diff = img1 - img2  # elementwise for scipy arrays
     m_norm = sum(abs(diff))  # Manhattan norm
@@ -116,24 +119,20 @@ class Video(Thread):
         Thread.__init__(self)
 
     def run(self):
-        MK_video = 'D:\Téléchargements\mariokart\MK (1).mp4'  # change the file name if needed
+        MK_video = 'D:\Téléchargements\mariokart\MK (2).mp4'  # change the file name if needed
         cap = cv2.VideoCapture(MK_video)  # load the video
+        im2 = Image.open("frame60.jpg")
         count = 0
         while (cap.isOpened()):  # play the video by reading frame by frame
             ret, frame = cap.read()
+            count += 1
             if ret == True:
-                count += 1
-                # optional: do some image processing here
-                cv2.imshow("Mario Kart", cv2.resize(frame, None, fx=0.2, fy=0.2, interpolation=cv2.INTER_CUBIC))
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-                if  count % 60 == 0:
-                    cv2.imwrite("frame%d.jpg" % ret, frame)  # save frame as JPEG file
-                    thread_4 = CheckState("frame1.jpg")
-                    thread_4.start()
-                    #thread_4.join()
-                    resultat1=thread_4.result
-                    print(resultat1)
+                # optional: do some image processing here
+                cv2.imshow("Mario Kart", cv2.resize(frame, None, fx=0.2, fy=0.2, interpolation=cv2.INTER_CUBIC))
+                if(count % 1000 == 0):
+                    cv2.imwrite("%d.jpg" % count, frame)  # save frame as JPEG file
             else:
                 break
         cap.release()

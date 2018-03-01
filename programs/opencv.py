@@ -1,103 +1,16 @@
 from threading import Thread
+from images_functions import *
 import cv2
 import os
 import os.path
 import glob
+import time
 
 import numpy
 from scipy.misc import imread
 from scipy.linalg import norm
 from scipy import sum, average
 from PIL import Image, ImageChops
-
-
-def check_map(arg1, arg2):
-    """
-    This function compare the full image with the database of maps and return te name of the level
-    where the MAnhattan norm is the lowest
-    2 arguments :
-        The path to the directory with all your maps screen
-        The image you wanna check
-    """
-    directory_map = arg1
-    image_test = arg2
-    image_test = to_grayscale(imread(image_test).astype(float))
-    files = glob.glob(directory_map +"\*")
-    # read images as 2D arrays (convert to grayscale for simplicity)
-    imgs = []
-    for file in files:
-        imgs.append(to_grayscale(imread(file).astype(float)))
-
-    # compare
-    index = 0
-    index_c = 0
-    min = 100
-    for img in imgs:
-        n_m, n_0 = compare_images(image_test, img)
-        if(n_m/img.size < min):
-            index = index_c
-            min = n_m/img.size
-        index_c += 1
-    print("=> ", os.path.basename(files[index])[:-4])
-
-
-def check_state(arg1, arg2):
-    """
-    This function compare the full image with the database of state and return the name of the stat
-    where the Manhattan norm if he is < 15.
-    2 arguments :
-        The path to the directory with all your state screen
-        The image you wanna check
-    """
-    directory_state = arg1
-    image_test = arg2
-    image_test = to_grayscale(imread(image_test).astype(float))
-    files = glob.glob(directory_state +"\*")
-    # read images as 2D arrays (convert to grayscale for simplicity)
-    imgs = []
-    for file in files:
-        imgs.append(to_grayscale(imread(file).astype(float)))
-
-    # compare
-    index = 0
-    index_c = 0
-    min = 200
-    for img in imgs:
-        n_m, n_0 = compare_images(image_test, img)
-        if(n_m/img.size < min):
-            index = index_c
-            min = n_m/img.size
-        index_c += 1
-    print("=> ", os.path.basename(files[index])[:-4], " : ", min)
-    if(min <15):
-        return os.path.basename(files[index])[:-4]
-    return ""
-
-
-def compare_images(img1, img2):
-    # normalize to compensate for exposure difference, this may be unnecessary
-    # consider disabling it
-    #img1 = normalize(img1)
-    #img2 = normalize(img2)
-    # calculate the difference and its norms
-    diff = img1 - img2  # elementwise for scipy arrays
-    m_norm = sum(abs(diff))  # Manhattan norm
-    z_norm = norm(diff.ravel(), 0)  # Zero norm
-    return (m_norm, z_norm)
-
-
-def to_grayscale(arr):
-    "If arr is a color image (3D array), convert it to grayscale (2D array)."
-    if len(arr.shape) == 3:
-        return average(arr, -1)  # average over the last axis (color channels)
-    else:
-        return arr
-
-
-def normalize(arr):
-    rng = arr.max()-arr.min()
-    amin = arr.min()
-    return (arr-amin)*255/rng
 
 
 class CheckState(Thread):
@@ -119,20 +32,53 @@ class Video(Thread):
         Thread.__init__(self)
 
     def run(self):
-        MK_video = 'D:\Téléchargements\mariokart\MK (2).mp4'  # change the file name if needed
+        MK_video = 'D:\Téléchargements\MK (3)(1).mp4'  # change the file name if needed
         cap = cv2.VideoCapture(MK_video)  # load the video
-        im2 = Image.open("frame60.jpg")
         count = 0
+        loading = "../ressources/miniframe/1740.jpg"
+        loading = get_grey_images_from_file(loading)
+        last_frame = 0
+        state = 0
+        start_time = time.time()
         while (cap.isOpened()):  # play the video by reading frame by frame
             ret, frame = cap.read()
-            count += 1
             if ret == True:
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-                # optional: do some image processing here
-                cv2.imshow("Mario Kart", cv2.resize(frame, None, fx=0.2, fy=0.2, interpolation=cv2.INTER_CUBIC))
-                if(count % 1000 == 0):
-                    cv2.imwrite("%d.jpg" % count, frame)  # save frame as JPEG file
+                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                mini_gray = gray_frame[0:100]
+                count += 1
+                if count==1800:
+                    cv2.imwrite("../ressources/miniframe/%d.jpg" % count, mini_gray)  # save frame as JPEG file
+                if(state == 0):  #loading
+                    if(compare_images_value(mini_gray, loading) < 2):
+                        print(str(count) + " : loading :" + str(compare_images_value(mini_gray, loading)))
+                        #check if we are in a real loading
+                        #cv2.imwrite("../ressources/miniframe/%d.jpg" % count, frame)  # save frame as JPEG file
+                        state = 1
+                if(state == 1):  #end of loading
+                    if(compare_images_value(mini_gray, loading) > 10):
+                        #print(str(count) + " : end loading")
+                        state = 2
+                        last_frame = count
+                        #cv2.imwrite("../ressources/tests/%d.jpg" % count, frame)  # save frame as JPEG file
+                if(state == 2):  #level name
+                    if(count == (last_frame+30)):
+                        score, name = score_compare_image_and_folder("../ressources/miniframe/valide",  mini_gray)
+                        if(score < 5):
+                            print(str(name) + " : " + str(score))
+                        else:
+                            #i don't know this map so i check his name :
+                            print("new map")
+                            test = to_grayscale(frame.astype(float))
+                            score, name = score_compare_image_and_folder("../ressources/maps", test)
+                            print(score, name)
+                            cv2.imwrite("../ressources/miniframe/valide/"+name+" "+str(score)+".jpg", mini_gray)  # save frame as JPEG file
+                            cv2.imwrite("../ressources/miniframe/secure/"+name+" "+str(score)+".jpg", frame)  # save frame as JPEG file
+                        state = 3
+                if(state == 3): #nothing to do, we search the loading for restart
+                    if (count == (last_frame + 100)):
+                        state = 0
+                #if(count%600 == 0):
+                    #print(str(count) +" : " + str(time.time() - start_time))
             else:
                 break
         cap.release()
@@ -143,6 +89,3 @@ thread_3 = Video()
 # Lancement des threads
 thread_3.start()
 
-
-# Attend que les threads se terminent
-thread_3.join()

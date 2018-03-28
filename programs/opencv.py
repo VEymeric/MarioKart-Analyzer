@@ -1,8 +1,7 @@
 from threading import Thread
 from images_functions import *
 from detection_functions import *
-#from Comparaison_Objet_Gris import *
-from test import *
+from Comparaison_Objet_Color import *
 import cv2
 import os
 import os.path
@@ -41,6 +40,7 @@ class Video(Thread):
         loading = "../ressources/miniframe/720.jpg"
         loading = get_grey_images_from_file(loading)
         state = 0
+        nb_player = 0
         start_time = time.time()
         while (cap.isOpened()):  # play the video by reading frame by frame
             ret, frame = cap.read()
@@ -49,20 +49,22 @@ class Video(Thread):
                 mini_gray = gray_frame[0:100]
                 count += 1
                 # nb_player = noname(gray_frame)
+                if count == 986:
+                    cv2.imwrite("../ressources/test/" + str(count) + ".jpg", frame)  # save frame as JPEG file
                 if state == 0:  # loading
+                    nb_player = selection_persoo(nb_player, frame, gray_frame, count)
                     state = is_loading(state, mini_gray, loading, count)
                 elif state == 1:  # end of loading
-                    # print(nb_player)
                     state, last_frame = is_end_of_loading(state, mini_gray, loading, count)
                 elif state == 2:  # level name
                     state = level_name(state, count, last_frame, mini_gray, frame)
                 elif state == 3:  # reconnaissance items
-                    state = run_detection(state,count, last_frame)
+                    state = state +1 #run_detection(state,count, last_frame, frame)
                 elif state == 4:  # nothing to do, we search the loading for restart
                     state = end_of_run_detection(state)
-                # cv2.imwrite("../ressources/test/" + str(count) + ".jpg",gray_frame)  # save frame as JPEG file
+                #cv2.imwrite("../../testColor/" + str(count) + ".jpg",frame)  # save frame as JPEG file
                 if count%200 == 0:
-                    print(count, state)
+                    print(count, state, nb_player)
             else:
                 break
         cap.release()

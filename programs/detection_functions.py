@@ -38,7 +38,9 @@ def level_name(state, count, last_frame, mini_gray, frame):
 
 
 def run_detection(state, count, last_frame, frame):
-    comparaisonObjet("../ressources/Objets/*", frame)
+    if(count>2580):
+        print(count)
+        comparaisonObjet(glob.glob("../ressources/Objets/30_30/*"), frame)
     return state
 
 def end_of_run_detection(state):

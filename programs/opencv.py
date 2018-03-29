@@ -34,7 +34,7 @@ class Video(Thread):
         Thread.__init__(self)
 
     def run(self):
-        MK_video = 'C:\\Users\ISEN\Videos\MK (3).mp4'  # change the file name if needed
+        MK_video = 'C:\\Users\ISEN\Videos\Capture4.mp4'  # change the file name if needed
         cap = cv2.VideoCapture(MK_video)  # load the video
         count = 0
         loading = "../ressources/miniframe/720.jpg"
@@ -49,17 +49,22 @@ class Video(Thread):
                 mini_gray = gray_frame[0:100]
                 count += 1
                 # nb_player = noname(gray_frame)
-                if count == 986:
-                    cv2.imwrite("../ressources/test/" + str(count) + ".jpg", frame)  # save frame as JPEG file
+                if count == 100:
+                    supertest = frame[0:200,300:]
+                    print(supertest)
+                    cv2.imwrite("../ressources/test/" + str(count) + ".jpg", supertest)  # save frame as JPEG file
                 if state == 0:  # loading
                     nb_player = selection_persoo(nb_player, frame, gray_frame, count)
                     state = is_loading(state, mini_gray, loading, count)
                 elif state == 1:  # end of loading
                     state, last_frame = is_end_of_loading(state, mini_gray, loading, count)
                 elif state == 2:  # level name
+                    debut = time.time()
                     state = level_name(state, count, last_frame, mini_gray, frame)
+                    fin = time.time()
+                    print(fin - debut)
                 elif state == 3:  # reconnaissance items
-                    state = state +1 #run_detection(state,count, last_frame, frame)
+                    state = state + 1#run_detection(state,count, last_frame, frame)
                 elif state == 4:  # nothing to do, we search the loading for restart
                     state = end_of_run_detection(state)
                 #cv2.imwrite("../../testColor/" + str(count) + ".jpg",frame)  # save frame as JPEG file

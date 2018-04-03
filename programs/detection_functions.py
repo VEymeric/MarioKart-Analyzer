@@ -1,5 +1,6 @@
 from images_functions import *
 from Comparaison_Objet_Color import *
+from course_functions import *
 
 
 def is_loading(state, mini_gray, loading_screen, count):
@@ -22,7 +23,8 @@ def is_end_of_loading(state, mini_gray, loading_screen, count):
 
 def level_name(state, count, last_frame, mini_gray, frame):
     if count == (last_frame + 30):
-        score, name = score_compare_image_and_folder("../ressources/miniframe/valide", mini_gray, True)
+        print("YOLO")
+        score, name = score_compare_image_and_folder("../ressources/maps/", mini_gray, False)
         if score < 10:
             print(str(name) + " : " + str(score))
         else:
@@ -36,6 +38,16 @@ def level_name(state, count, last_frame, mini_gray, frame):
         return state + 1
     return state
 
+
+def is_partez(state, frame, partez, count):
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    frames = [frame[350:580, 410:1500]]
+    ignore, score = find_element_from_database_on_frame(frames, "../ressources/partez/")
+    if(score[0]<15):
+        print("PARTEZ : " ,count, score[0])
+        return state + 1
+    else:
+        return state
 
 def run_detection(state, count, last_frame, frame):
     if(count>2580):

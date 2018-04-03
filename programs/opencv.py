@@ -30,8 +30,10 @@ class Video(Thread):
         cap.set(3, 1920)
         cap.set(4, 1080)
         count = 0
-        loading = "../ressources/miniframe/720.jpg"
+        loading = "../ressources/states/loading.jpg"
         loading = get_grey_images_from_file(loading)
+        loading = loading[:100]
+        partez = "../ressources/partez/"
         state = 0
         nb_player = 0
         last_frame = 0
@@ -53,7 +55,7 @@ class Video(Thread):
                     mini_gray = gray_frame[0:100]
                     state = level_name(state, count, last_frame, mini_gray, frame)
                 elif state == 3:  # reconnaissance course
-                    state = state + 1  # run_detection(state,count, last_frame, frame)
+                    state = is_partez(state, frame, partez, count)  # run_detection(state,count, last_frame, frame)
                 elif state == 4:  # nothing to do, we search the loading for restart
                     state = end_of_run_detection(state)
 

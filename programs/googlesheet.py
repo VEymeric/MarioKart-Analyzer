@@ -8,7 +8,7 @@ creds = None
 client = None
 sheet = None
 try:
-    scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name('../../client_secret.json', scope)
     client = gspread.authorize(creds)
 
@@ -17,6 +17,7 @@ try:
     sheet = client.open("MK data").sheet1
 except:
     pass
+
 
 def update(values):
     # Select a range

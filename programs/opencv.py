@@ -24,7 +24,7 @@ class Video(Thread):
         Thread.__init__(self)
 
     def run(self):
-        mk_video = 'C:\\Users\ISEN\Videos\MK (1).mp4'  # change the file name if needed
+        mk_video = 'C:\\Users\ISEN\Videos\Mario Kart All Places.mp4'  # change the file name if needed
         cap = cv2.VideoCapture(mk_video)  # load the video
         # cap = cv2.VideoCapture(1)  # load the video
         cap.set(3, 1920)
@@ -56,11 +56,11 @@ class Video(Thread):
                     state = state + 1  # run_detection(state,count, last_frame, frame)
                 elif state == 4:  # nothing to do, we search the loading for restart
                     state = end_of_run_detection(state)
-                """
+
                 if count%200 == 0:
                     print(count, state, nb_player)
-                cv2.imwrite("../ressources/test2P/" + str(count) + ".jpg", frame)  # save frame as JPEG file
-                """
+                cv2.imwrite("../ressources/testposition/" + str(count) + ".jpg", frame)  # save frame as JPEG file
+
             else:
                 break
         cap.release()

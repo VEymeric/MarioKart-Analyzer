@@ -3,11 +3,7 @@ from Comparaison_Objet_Color import *
 
 
 def is_loading(state, mini_gray, loading_screen, count):
-<<<<<<< HEAD
     if compare_images_value(mini_gray, loading_screen) < 4:
-=======
-    if compare_images_value(mini_gray, loading_screen) < 2:
->>>>>>> 72678abcfa600e25365351fa49b1b8012a4a639f
         print(str(count) + " : loading :" + str(compare_images_value(mini_gray, loading_screen)))
         # check if we are in a real loading
         # cv2.imwrite("../ressources/miniframe/%d.jpg" % count, frame)  # save frame as JPEG file
@@ -26,11 +22,7 @@ def is_end_of_loading(state, mini_gray, loading_screen, count):
 
 def level_name(state, count, last_frame, mini_gray, frame):
     if count == (last_frame + 30):
-<<<<<<< HEAD
         score, name = score_compare_image_and_folder("../ressources/miniframe/valide", mini_gray, True)
-=======
-        score, name = score_compare_image_and_folder("../ressources/miniframe/valide", mini_gray)
->>>>>>> 72678abcfa600e25365351fa49b1b8012a4a639f
         if score < 10:
             print(str(name) + " : " + str(score))
         else:

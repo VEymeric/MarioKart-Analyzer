@@ -51,7 +51,7 @@ def creating_contour_database(init_path, final_path):
         cv2.imwrite(final_path + name_of_image(file) + ".jpg", new_file)  # save frame as JPEG file
 
 
-def check_places_multi_frames() 
+"""def check_places_multi_frames():
+"""
 if __name__ == "__main__":
-    test_frame = cv2.cvtColor(cv2.imread("../../testColor/2623.jpg"), cv2.COLOR_BGR2GRAY)
-    print(find_places_on_frame(test_frame, "../ressources/position/4players", 4))
+

@@ -1,51 +1,40 @@
-from PIL import Image
-from PIL import ImageChops
 from images_functions import *
 import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+import time
+kernel = np.ones((3,3),np.uint8)
 
-#On stock les pixel x left et x right,y top et y bottom pour les positions des joueurs
-#par exemple pour le J1, on est dans le coin haut gauche.
-frame = cv2.imread("../ressources/test/986.jpg")
-yT= 90
-yB = 540
-xL = 485
-xR = 1000
-zJ1 = [ 19 ,233, 252]
-zJ2 = [240, 170, 23]
-zJ3  =[138, 131,  240]
-zJ4 = [ 83, 255, 131]
-print(frame[yT][xL])
-print(frame[yT][xR])
-print(frame[yB][xL])
-print(frame[yB][xR])
-if abs(frame[yB][xL][0] - zJ3[0]) < 5 and abs(frame[yB][xL][1] - zJ3[1]) < 5 and abs(frame[yB][xL][2] - zJ3[2]) < 5:
-    print(True)
-else:
-    print("tt")
+debut = time.time()
+frame = cv2.imread("../../testColor/3068.jpg")
+gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+place = []
+place.append(gray_frame[430:500, 830:875])
+place.append(gray_frame[430:500, 1790:1835])
+place.append(gray_frame[970:1040, 830:875])
+place.append(gray_frame[970:1040, 1790:1835])
 
-if(True):
-    if abs(frame[yT][xL][0] - zJ1[0]) < 5 and abs(frame[yT][xL][1] - zJ1[1]) < 5 and abs(frame[yT][xL][2] - zJ1[2]) < 5:
-        if abs(frame[yB][xR][0] - zJ4[0]) < 5 and abs(frame[yB][xR][1] - zJ4[1]) < 5 and abs(frame[yB][xR][2] - zJ4[2]) < 5:
-            value = 4
-        elif abs(frame[yB][xL][0] - zJ3[0]) < 5 and abs(frame[yB][xL][1] - zJ3[1]) < 5 and abs(frame[yB][xL][2] - zJ3[2]) < 5:
-            value = 3
-        elif abs(frame[yT][xR][0] - zJ2[0]) < 5 and abs(frame[yT][xR][1] - zJ2[1]) < 5 and abs(frame[yT][xR][2] - zJ2[2]) < 5:
-            value = 2
-        else:
-            value = 1
-        print(value)
+gradientX = []
+gradientX.append(cv2.morphologyEx(place[0], cv2.MORPH_GRADIENT, kernel))
+gradientX.append(cv2.morphologyEx(place[1], cv2.MORPH_GRADIENT, kernel))
+gradientX.append(cv2.morphologyEx(place[2], cv2.MORPH_GRADIENT, kernel))
+gradientX.append(cv2.morphologyEx(place[3], cv2.MORPH_GRADIENT, kernel))
 
-def selection_perso():
-    if(abs(frame[xL][yT] - zJ1) < 10):
-        test = test
-def noname(im2):
-    #cv2.imread("../ressources/test/1000.jpg")
-    if(abs(im2[xR][yB] - zJ4) < 10):
-        return 4
-    if(abs(im2[xL][yB] - zJ3) < 10):
-        return 3
-    if(abs(im2[xR][yT] - zJ2) < 10):
-        return 2
-    return None
-
-
+mini = [50,50,50,50]
+resultat = [0,0,0,0]
+files = glob.glob("c/" + "\*")
+for file in files:
+    gradientY = cv2.imread(file)
+    gradientY = cv2.cvtColor(gradientY, cv2.COLOR_BGR2GRAY)
+    for i in range(4):
+        diff = cv2.absdiff(gradientX[i], gradientY)
+        print(diff)
+        print(sum(diff))
+        m_norm = sum(abs(diff))/gradientX[i].size
+        print(os.path.basename(file)[:-4] + " : " + str(m_norm))
+        if(mini[i] > m_norm):
+            mini[i] = m_norm
+            resultat[i] = os.path.basename(file)[:-4]
+print(resultat)
+print(mini)
+print(time.time() - debut)

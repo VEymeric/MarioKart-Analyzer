@@ -1,8 +1,10 @@
 import glob
 import os.path
 import cv2
+import sys
 from scipy.misc import imread
 from scipy import sum, average
+from googlesheet import *
 
 
 def name_of_image(path_file):
@@ -32,16 +34,25 @@ def compare_images_value(img1, img2):
     return m_norm/img1.size
 
 
-def score_compare_image_and_folder(folder, image):
+def score_compare_image_and_folder(folder, image, update_google_sheet):
     files, imgs_grey = get_grey_images_from_dir(folder)
     best_index = None
     best_score = 100000000000000
+    data_google1 = []
+    data_google2 = []
     for index, file in enumerate(imgs_grey):
         score = compare_images_value(image, file)
+        if client is None:
+            update_google_sheet = False
+        if(update_google_sheet):
+            data_google1.append(name_of_image(files[index]))
+            data_google2.append(score)
         #print(score, name_of_image(files[index]))
         if score < best_score:
             best_score = score
             best_index = index
+    if (update_google_sheet):
+        update(data_google2)
     return best_score, name_of_image(files[best_index])
 
 

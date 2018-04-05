@@ -1,6 +1,9 @@
 from images_functions import *
 from Comparaison_Objet_Color import *
 from course_functions import *
+from Verification import *
+
+big_array_places = [[], [], [], []]
 
 
 def is_loading(state, mini_gray, loading_screen, count):
@@ -24,7 +27,7 @@ def is_end_of_loading(state, mini_gray, loading_screen, count):
 def level_name(state, count, last_frame, mini_gray, frame):
     if count == (last_frame + 30):
         print("YOLO")
-        score, name = score_compare_image_and_folder("../ressources/maps/", mini_gray, False)
+        score, name = score_compare_image_and_folder("../ressources/maps/", mini_gray, [True, ])
         if score < 10:
             print(str(name) + " : " + str(score))
         else:
@@ -41,13 +44,33 @@ def level_name(state, count, last_frame, mini_gray, frame):
 
 def is_partez(state, frame, partez, count):
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    frames = [frame[350:580, 410:1500]]
-    ignore, score = find_element_from_database_on_frame(frames, "../ressources/partez/")
-    if(score[0]<15):
-        print("PARTEZ : " ,count, score[0])
+    frames = [frame[390:550, 425:1330]]
+    score, name = score_compare_image_and_folder(partez, frames[0], False)
+    if score<25 :
+        print("PARTEZ : " ,count, score)
+        cv2.imwrite("../ressources/TEST/" + str(count) + ".jpg", frame)  # save frame as JPEG file
         return state + 1
     else:
         return state
+
+
+def check_places(state, count, frame, nb_player):
+    database_folder = "../ressources/position/4players/"
+    little_frames = []
+    if nb_player > 2:
+        little_frames.append(frame[430:500, 830:875])
+        little_frames.append(frame[430:500, 1790:1835])
+        little_frames.append(frame[970:1040, 830:875])
+    if nb_player == 4:
+        little_frames.append(frame[970:1040, 1790:1835])
+    places, score = (count, find_element_from_database_on_frame(little_frames, database_folder,25))[1]
+    for i in range(nb_player):
+        big_array_places[i].append(places[i])
+    #print(big_array_places)
+    Verification(big_array_places, nb_player)
+
+    return state
+
 
 def run_detection(state, count, last_frame, frame):
     if(count>2580):
@@ -69,7 +92,8 @@ zJ3 = [138, 131,  240]
 zJ4 = [83, 255, 131]
 
 
-def selection_persoo(nb_player, frame, gray_frame, count):
+def selection_perso(video, frame, gray_frame, count):
+    
     if abs(frame[yT][xL][0] - zJ1[0]) < 5 and abs(frame[yT][xL][1] - zJ1[1]) < 5 and abs(frame[yT][xL][2] - zJ1[2]) < 5:
         if abs(frame[yB][xR][0] - zJ4[0]) < 10 and abs(frame[yB][xR][1] - zJ4[1]) < 5 and abs(frame[yB][xR][2] - zJ4[2]) < 10:
             value = 4
@@ -81,16 +105,14 @@ def selection_persoo(nb_player, frame, gray_frame, count):
             value = 1
         return value
     return nb_player
-if __name__ == "__main__":
-    loading = "../ressources/miniframe/720.jpg"
-    loadind = cv2.imread(loading)
-    loading = cv2.cvtColor(loading, cv2.COLOR_BGR2GRAY)
-    loading2 = "yolo.jpg"
-    #loading = cv2.imread(loading)
-    loading2 = cv2.imread(loading2)
 
-    screen = "../ressources/test/1600.jpg"
-    test = cv2.imread(screen)[0:100]
+
+if __name__ == "__main__":
+    screen = cv2.imread("../ressources/states/615.jpg")
+    loading = cv2.imread("../ressources/states/loading613.jpg")
+
+    #screen = "../ressources/test/1600.jpg"
+    test = screen[0:100]
     print(compare_images_value(loading, test))
     print(compare_images_value(test, loading))
     print(compare_images_value(loading2, test))

@@ -60,7 +60,7 @@ def Transition(donnee, J):
 def Verification(donnee,i):
     for i in range(0,i):
         resultat = Transition(donnee,i)
-    return resultat
+    #return resultat
 
 
 if __name__ == "__main__":

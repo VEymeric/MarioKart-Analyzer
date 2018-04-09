@@ -52,7 +52,7 @@ def score_compare_image_and_folder(folder, image, update_google_sheet):
             best_score = score
             best_index = index
     if (update_google_sheet):
-        update(data_google2)
+        update(data_google2, 0, 'C' , 1)
     return best_score, name_of_image(files[best_index])
 
 

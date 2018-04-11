@@ -21,6 +21,10 @@ END_LOADING_SCORE = 10
 TEMPO_LEVEL = 30
 LEVEL_SCORE = 10
 PARTEZ_SCORE = 25
+LAPS_SCORE = 30
+PLACES_SCORE = 25
+ITEMS_SCORE = 15
+
 
 class Video(Thread):
     """Thread chargé simplement d'afficher un mot dans la console."""
@@ -31,10 +35,11 @@ class Video(Thread):
         self.loading_file = "../ressources/states/loading.jpg"
         self.partez_file = "../ressources/partez/"
         self.terminer_file = "../ressources/termine/"
-        self.objets_foler = "../ressources/Objets/30_30/"
+        self.objets_foler = "../ressources/objets/"
         self.positions_folder = "../ressources/position/4players/"
         self.level_folder = "../ressources/maps/"
         self.test_folder = "../ressources/TEST/"
+        self.laps_folder = "../ressources/laps/"
         self.count = 0
         self.frame = None
         self.gray_frame = None
@@ -47,9 +52,6 @@ class Video(Thread):
 
         # pretraitement
         loading = get_grey_images_from_file(self.loading_file)[:100]
-
-        state = 0
-        nb_player = 0
         last_frame = 0
         # start_time = time.time()
         while cap.isOpened():  # play the video by reading frame by frame
@@ -60,24 +62,47 @@ class Video(Thread):
                 if self.gp.state == 0:  # loading
                     selection_perso(self)
                     is_loading(self, loading, LOADING_SCORE)
-                    #self.gp.begin(4)
                 elif self.gp.state == 1:  # end of loading
+                    if self.gp.nb_player is None:
+                        """
+                        CAS D'ERREUR CODE EN DURE
+                        """
+                        # self.gp.begin(4)
+                        print("Détection du nombre de joueur fail, init to 4")
+
                     last_frame = is_end_of_loading(self, loading, END_LOADING_SCORE)
                 elif self.gp.state == 2:  # level name
                     level_name(self, last_frame+TEMPO_LEVEL, LEVEL_SCORE)
-                elif self.gp.state == 3:  # reconnaissance course
+                elif self.gp.state == 3:  # reconnaissance début de course
                     is_partez(self, self.partez_file, PARTEZ_SCORE)
-                    big_array_places = [[None, None, None, None]]
-                elif self.gp.state == 4:  # course : places uniquement
-                    check_places(self, self.positions_folder)
-                    is_terminer(self, self.terminer_file, PARTEZ_SCORE)
-                elif self.gp.state == 5:  # nothing to do, we search the loading for restart
-                    set_positions_on_googlesheet(self.gp.get_last_run().positions_data)
+                elif self.gp.state == 4:  # course
+                    check_places(self, self.positions_folder, PLACES_SCORE)
+                    check_items(self, self.objets_foler, ITEMS_SCORE)
+                    detect_tour(self, self.laps_folder, LAPS_SCORE)
+                    last_frame = is_terminer(self, self.terminer_file, PARTEZ_SCORE)
+                elif self.gp.state == 5 and self.count == last_frame:  # we search the loading for restart
+                    # set_positions_on_googlesheet(self.gp.get_last_run().positions_data)
+                    print(self.gp.get_last_run().positions_data)
+                    # self.gp.get_last_run().set_classement_data = calcul_points(self.gp.get_last_run().
+                    # set_classement_data, classement(self.frame))
+                    self.gp.state = 6
+                elif self.gp.state == 6:
+                    if self.gp.final_score_position == [0] * self.gp.nb_player:
+                        self.gp.final_score_position = classement(self.frame, self.count)
+                        self.gp.state = 7
+                    elif grand_prix(self):
+                        self.gp.state = 7
+                    else:
+                        cv2.imwrite(str(self.count) + ".jpg", self.frame)
+
+                elif self.gp.state == 7:
+                    print("timers :", self.gp.get_last_run().timers())
+                    print("GP classment :", self.gp.final_score_position)
                     self.gp.state = 0
-                if self.count%200 == 0:
+                if self.count % 200 == 0:
                     print(self.count, self.gp.state, self.gp.nb_player)
-                if self.count % 501 == 0:
-                    cv2.imwrite("../ressources/testreel/" + str(self.count) + ".jpg", self.frame)  # save frame as JPEG file
+                # cv2.imwrite("../ressources/testcrono/" + str(self.count) + ".jpg", self.frame)
+                    #  save frame as JPEG file
 
             else:
                 break
@@ -86,6 +111,6 @@ class Video(Thread):
 
 
 # for read a video
-Video('C:\\Users\ISEN\Videos\Mario Kart All Places.mp4').start()
+Video('C:\\Users\ISEN\Videos\MK (3).mp4').start()
 # for read a capture
 # Video(1).start()

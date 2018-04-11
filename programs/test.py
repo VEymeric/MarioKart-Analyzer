@@ -1,5 +1,4 @@
-x = [1, 2, 3]
-y = [4, 5, 6]
-zipped = zip(x, y)
+from cv2 import *
 
-print(zipped)
+image = cv2.imread("../ressources/states/615.jpg")[918:990]
+cv2.imwrite("truc.png", image)

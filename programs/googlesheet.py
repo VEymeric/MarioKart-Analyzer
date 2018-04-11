@@ -21,13 +21,16 @@ except:
 
 
 def update(values, page, column, line):
-    sheet = client.open("MK data").get_worksheet(page)
-    # Select a range
-    cell_list = sheet.range(column + str(line) + ':'+ column + str(line - 1 + len(values)))
-    for i, cell in enumerate(cell_list):
-        cell.value = values[i]
-    # Update in batch
-    sheet.update_cells(cell_list)
+    try:
+        sheet = client.open("MK data").get_worksheet(page)
+        # Select a range
+        cell_list = sheet.range(column + str(line) + ':'+ column + str(line - 1 + len(values)))
+        for i, cell in enumerate(cell_list):
+            cell.value = values[i]
+        # Update in batch
+        sheet.update_cells(cell_list)
+    except:
+        pass
 
 
 def insert(values, index):
@@ -36,7 +39,6 @@ def insert(values, index):
 
 def set_positions_on_googlesheet(array):
     nb_player = len(array)
-    print(array)
     for player in range(nb_player):
         total_frame = len(array[player])
         array_purcent_time = []

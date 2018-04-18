@@ -5,7 +5,6 @@ class Run:
         self.timers_data = []
         self.items_data = []
         self.classement_data = [0]*nb_player
-
         for i in range(self.nb_player):
             self.positions_data.append([])
             self.timers_data.append([])

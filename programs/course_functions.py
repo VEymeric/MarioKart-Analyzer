@@ -77,30 +77,44 @@ def detect_tour(video, database_folder, score_detect):
         little_frames.append(frame[1015:1045, 1130:1150])
 
     for i in range(video.gp.nb_player):
-        name, score = (video.count, find_element_from_database_on_frame(little_frames, database_folder, 25))[1]
-        if name[i] is not None and int(name[i]) < score_detect:
+        name, score = (video.count, find_element_from_database_on_frame(little_frames, database_folder, score_detect))[1]
+        if name[i] is not None and int(name[i]) < score_detect and video.gp.get_last_run().players_statut_data[i] != 0:
+            video.logger.debug("%s %s", name, score)
             if int(name[i]) == len(video.gp.get_last_run().timers_data[i])+1:
                 video.gp.get_last_run().timers_data[i].append(video.count)
+                video.logger.info("J%s is on laps %s", str(i+1), name[i])
+                #cv2.imwrite("../ressources/TEST/" + str(video.count) + "_laps.jpg", frame)  # save frame as JPEG file
+
 
 
 def check_places(video, database_folder, detection_score):
-    frame = video.gray_frame
-    little_frames = []
-    if video.gp.nb_player > 2:
-        little_frames.append(frame[430:500, 830:875])
-        little_frames.append(frame[430:500, 1790:1835])
-        little_frames.append(frame[970:1040, 830:875])
-    if video.gp.nb_player == 4:
-        little_frames.append(frame[970:1040, 1790:1835])
-    places, score = (video.count, find_element_from_database_on_frame(little_frames, database_folder,
-                                                                      detection_score))[1]
-    for i in range(video.gp.nb_player):
-        if places[i] is None:
-            video.gp.get_last_run().positions_data[i].append(None)
-        else:
-            video.gp.get_last_run().positions_data[i].append(int(places[i]))
+    try:
+        frame = video.gray_frame
+        little_frames = []
+        if video.gp.nb_player > 2:
+            little_frames.append(frame[430:500, 830:875])
+            little_frames.append(frame[430:500, 1790:1835])
+            little_frames.append(frame[970:1040, 830:875])
+        if video.gp.nb_player == 4:
+            little_frames.append(frame[970:1040, 1790:1835])
+        places, score = (video.count, find_element_from_database_on_frame(little_frames, database_folder,
+                                                                        detection_score))[1]
 
-    Verification(video.gp.get_last_run().positions_data, video.gp.nb_player)
+        for i in range(video.gp.nb_player):
+            if places[i] is None:
+                if video.gp.get_last_run().players_statut_data[i] == 0:
+                    video.gp.get_last_run().positions_data[i].append(video.gp.get_last_run().positions_data[i][len(video.gp.get_last_run().positions_data[i])-1])
+                else:
+                    video.gp.get_last_run().positions_data[i].append(None)
+                    #cv2.imwrite("../ressources/TEST/" + str(video.count) + "_NonePlaces_" + str(i) + ".jpg", frame)  # save frame as JPEG file
+
+            else:
+                video.gp.get_last_run().positions_data[i].append(int(places[i]))
+
+        Verification(video.gp.get_last_run().positions_data, video.gp.nb_player)
+    except:
+        video.logger.warning(video.gp.nb_player, video.gp.get_last_run().nb_player)
+        raise
 
 
 def check_items(video, database_folder, detection_score):
@@ -115,4 +129,7 @@ def check_items(video, database_folder, detection_score):
     items, score = (video.count, find_element_from_database_on_frame(little_frames, database_folder,
                                                                      detection_score))[1]
     for i in range(video.gp.nb_player):
-        video.gp.get_last_run().items_data[i].append(items[i])
+        if video.gp.get_last_run().players_statut_data[i] == 0:
+            video.gp.get_last_run().items_data[i].append(None)
+        else:
+            video.gp.get_last_run().items_data[i].append(items[i])

@@ -78,10 +78,11 @@ def detection_changement_place(tableau):
         for j in range(0,len(tableau)):
             J = tableau[j]
             if (J[i]!= place_reference[j] and J[i] is not None):
-                for k in range(0,len(tableau)):
+                for k in range(0, len(tableau)):
                     K = tableau[k]
                     F = tableau_final[k]
                     F.append(K[i])
                     place_reference[k] = K[i]
-    return tableau_final
+                liste_frame.append(i)
+    return tableau_final, liste_frame
 ############################

@@ -27,8 +27,8 @@ def get_grey_images_from_file(file):
 def compare_images_value(img1, img2):
     # normalize to compensate for exposure difference, this may be unnecessary
     # consider disabling it
-    #img1 = normalize(img1)
-    #img2 = normalize(img2)
+    # img1 = normalize(img1)
+    # img2 = normalize(img2)
     # calculate the difference and its norms
     diff = img1 - img2  # elementwise for scipy arrays
     m_norm = sum(abs(diff))  # Manhattan norm
@@ -70,18 +70,13 @@ def normalize(array):
     return (array-amin)*255/rng
 
 
-def save_image_gray(frame, name, folder):
-    #frame = to_grayscale(imread(frame).astype(float))
-    cv2.imwrite(folder + "/" + name + ".jpg", frame)  # save frame as JPEG file
-
-
 if __name__ == "__main__":
     image_loading =  cv2.cvtColor(cv2.imread("pop/r.jpg"), cv2.COLOR_BGR2GRAY)[:72]
     image_loading2 =  cv2.cvtColor(cv2.imread("truc.png"), cv2.COLOR_BGR2GRAY)
     image_loading3 =  cv2.cvtColor(cv2.imread("../../testColor/1687.jpg"), cv2.COLOR_BGR2GRAY)[918:990]
-    #cv2.imwrite("r.jpg", screen)
-    #cv2.imwrite("q.jpg", image_loading)
-    #cv2.imwrite("q.jpg", image_loading-screen)
+    # cv2.imwrite("r.jpg", screen)
+    # cv2.imwrite("q.jpg", image_loading)
+    # cv2.imwrite("q.jpg", image_loading-screen)
     somme_px_noir1 = np.sum(image_loading == 0)
     somme_px_noir2 = np.sum(image_loading3 == 0)
     print(somme_px_noir1,somme_px_noir2)

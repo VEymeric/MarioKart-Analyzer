@@ -4,6 +4,7 @@ import numpy as np
 import glob
 import os
 from Verification import *
+import time
 
 
 def find_element_from_database_on_frame(little_frames, database_folder, score_min):
@@ -13,7 +14,7 @@ def find_element_from_database_on_frame(little_frames, database_folder, score_mi
     :param score_min: score min to detect the element
     :return: the array of names of element detected and the score
     """
-    detected_places = []
+    detected_element = []
     kernel = np.ones((3, 3), np.uint8)
 
     min_detection_score = len(little_frames)*[score_min]
@@ -24,9 +25,9 @@ def find_element_from_database_on_frame(little_frames, database_folder, score_mi
     for file in database:
         gradient = cv2.cvtColor(cv2.imread(file), cv2.COLOR_BGR2GRAY)
         for i in range(len(little_frames)):
-            detected_places.append(cv2.morphologyEx(little_frames[i], cv2.MORPH_GRADIENT, kernel))
-            diff = cv2.absdiff(detected_places[i], gradient)
-            m_norm = sum(abs(diff))/detected_places[i].size
+            detected_element.append(cv2.morphologyEx(little_frames[i], cv2.MORPH_GRADIENT, kernel))
+            diff = cv2.absdiff(detected_element[i], gradient)
+            m_norm = sum(abs(diff))/detected_element[i].size
             # print(m_norm)
             if min_detection_score[i] > m_norm:
                 min_detection_score[i] = m_norm
@@ -35,38 +36,40 @@ def find_element_from_database_on_frame(little_frames, database_folder, score_mi
 
 
 def creating_contour_database(init_path, final_path):
+    """on transforme une database en détection de contour,
+    attention à mettre 2 path différent pour éviter la boucl infinie """
     database = glob.glob(init_path + "\*")
     print(database)
     kernel = np.ones((3, 3), np.uint8)
     for file in database:
         new_file = cv2.cvtColor(cv2.imread(file), cv2.COLOR_BGR2GRAY)
         new_file = cv2.morphologyEx(new_file, cv2.MORPH_GRADIENT, kernel)
-        cv2.imwrite(final_path + name_of_image(file) + ".jpg", new_file)  # save frame as JPEG file
+        cv2.imwrite(final_path + (file[:-4]) + ".jpg", new_file)  # save frame as JPEG file
 
 
-def calcul_points(tableau_final, tab12):
-    test = tableau_final
+def calcul_points(gp, tab_points, logger):
+    logger.debug("score course : %s", tab_points)
     for i in range(0, 12):
-        if tab12[i] == 'J1':
-            test[0] += ajoute_point(i)
-        if tab12[i] == 'J2':
-            test[1] += ajoute_point(i)
-        if tab12[i] == 'J3':
-            test[2] += ajoute_point(i)
-        if tab12[i] == 'J4':
-            test[3] += ajoute_point(i)
-    return test
+        if tab_points[i] == 'J1':
+            ajoute_point(gp, i, 0)
+        if tab_points[i] == 'J2':
+            ajoute_point(gp, i, 1)
+        if tab_points[i] == 'J3':
+            ajoute_point(gp, i, 2)
+        if tab_points[i] == 'J4':
+            ajoute_point(gp, i, 3)
 
 
-def ajoute_point(i):
+def ajoute_point(gp, i, player):
     if i == 0:
-        return 15
-    if i == 1:
-        return 12
-    return 12 - i
+        gp.final_score_points[player] += 15
+    elif i == 1:
+        gp.final_score_points[player] += 12
+    else:
+        gp.final_score_points[player] += (12-i)
 
 
-def detect_tour(video, database_folder, score_detect):
+def detect_tour(video, database_folder, timer_debut_de_course, score_detect):
     little_frames = []
     frame = video.gray_frame
     if video.gp.nb_player > 2:
@@ -79,12 +82,10 @@ def detect_tour(video, database_folder, score_detect):
     for i in range(video.gp.nb_player):
         name, score = (video.count, find_element_from_database_on_frame(little_frames, database_folder, score_detect))[1]
         if name[i] is not None and int(name[i]) < score_detect and video.gp.get_last_run().players_statut_data[i] != 0:
-            video.logger.debug("%s %s", name, score)
-            if int(name[i]) == len(video.gp.get_last_run().timers_data[i])+1:
-                video.gp.get_last_run().timers_data[i].append(video.count)
+            if int(name[i]) == len(video.gp.get_last_run().timers_data[i])+2:
+                video.gp.get_last_run().timers_data[i].append(time.time() - timer_debut_de_course)
                 video.logger.info("J%s is on laps %s", str(i+1), name[i])
-                #cv2.imwrite("../ressources/TEST/" + str(video.count) + "_laps.jpg", frame)  # save frame as JPEG file
-
+                #  cv2.imwrite("../ressources/TEST/" + str(video.count) + "_laps.jpg", frame)  # save frame as JPEG file
 
 
 def check_places(video, database_folder, detection_score):
@@ -101,12 +102,12 @@ def check_places(video, database_folder, detection_score):
                                                                         detection_score))[1]
 
         for i in range(video.gp.nb_player):
-            if places[i] is None:
+            if places[i] is None:  # pré-traitement si on ne dtecte pas la place
                 if video.gp.get_last_run().players_statut_data[i] == 0:
                     video.gp.get_last_run().positions_data[i].append(video.gp.get_last_run().positions_data[i][len(video.gp.get_last_run().positions_data[i])-1])
                 else:
                     video.gp.get_last_run().positions_data[i].append(None)
-                    #cv2.imwrite("../ressources/TEST/" + str(video.count) + "_NonePlaces_" + str(i) + ".jpg", frame)  # save frame as JPEG file
+                    # cv2.imwrite("../ressources/TEST/" + str(video.count) + "_NonePlaces_" + str(i) + ".jpg", frame)  # save frame as JPEG file
 
             else:
                 video.gp.get_last_run().positions_data[i].append(int(places[i]))

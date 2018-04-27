@@ -17,18 +17,17 @@ class Run:
     def set_classement_data(self, player, new_data):
         self.classement_data = new_data
 
-    def timers(self):
-        values = []
-        print(self.timers_data)
+    def change_les_points(self, joueur, nb_point):
+        self.classement_data[joueur] +=  nb_point
 
+    def timers(self, logger):
+        values = []
+        logger.info("laps time  :  %s", self.timers_data)
+        min_laps = self.timers_data[0][-1]
         for player in range(self.nb_player):
-            values.append([])
-            if len(self.timers_data[player]) > 1:
-                previous = self.timers_data[player][0]
-                for t in self.timers_data[player][1:]:
-                    if self.nb_player > 2:
-                        values[player].append((t-previous)/30)
-                    else:
-                        values[player].append((t-previous)/60)
-                    previous = t
+            if(min_laps > self.timers_data[player][-1]):
+                min_laps = self.timers_data[player][-1]
+        for player in range(self.nb_player):
+            logger.info("Final time  :  J%s: +%3s", player+1, self.timers_data[player][-1]-min_laps)
+
         return values
